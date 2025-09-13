@@ -56,7 +56,6 @@ export default function App() {
           screenOptions={{
             headerShown: false, // Hide default header to use custom UI
             gestureEnabled: true,
-            animationEnabled: true,
             cardStyleInterpolator: ({ current, layouts }) => {
               return {
                 cardStyle: {

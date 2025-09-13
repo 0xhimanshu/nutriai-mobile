@@ -113,10 +113,10 @@ const GoalsScreen: React.FC = () => {
             size="lg" 
             onPress={handleContinue}
             disabled={!selectedGoal}
-            style={[
-              styles.continueButton,
-              !selectedGoal && styles.buttonDisabled
-            ]}
+            style={!selectedGoal ? 
+              { ...styles.continueButton, ...styles.buttonDisabled } : 
+              styles.continueButton
+            }
           >
             <View style={styles.buttonContent}>
               <Text style={styles.buttonText}>Continue</Text>
