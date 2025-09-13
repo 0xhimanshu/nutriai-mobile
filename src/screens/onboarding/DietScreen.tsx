@@ -4,13 +4,14 @@
  */
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import type { RootStackParamList } from '../../../App';
 import { MobileFrame } from '../../components/MobileFrame';
+import { useUser } from '../../context/UserContext';
 import { Button } from '../../components/Button';
 import { Progress } from '../../components/Progress';
 import { SelectionCard } from '../../components/SelectionCard';
@@ -25,7 +26,8 @@ const dietOptions = [
 
 const DietScreen: React.FC = () => {
   const navigation = useNavigation<DietScreenNavigationProp>();
-  const [selectedDiets, setSelectedDiets] = useState<string[]>([]);
+  const { userData, updateUserData } = useUser();
+  const [selectedDiets, setSelectedDiets] = useState<string[]>(userData.dietaryPreferences || []);
 
   const toggleDiet = (diet: string) => {
     setSelectedDiets(prev => 
@@ -34,8 +36,22 @@ const DietScreen: React.FC = () => {
   };
 
   const handleContinue = () => {
-    // In production, save the diet preferences
-    console.log('Selected diets:', selectedDiets);
+    // Business logic: At least one diet preference should be selected
+    if (selectedDiets.length === 0) {
+      Alert.alert(
+        'Diet Preference Required',
+        'Please select at least one dietary preference to continue, or choose "No specific diet".',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    // Save diet preferences to global context
+    updateUserData({
+      dietaryPreferences: selectedDiets
+    });
+    
+    console.log('Diet preferences saved:', selectedDiets);
     navigation.navigate('OnboardingAllergies');
   };
 

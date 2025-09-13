@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,6 +12,7 @@ import type { StackNavigationProp } from '@react-navigation/stack';
 import type { RootStackParamList } from '../../../App';
 import { MobileFrame } from '../../components/MobileFrame';
 import { Button } from '../../components/Button';
+import { useUser } from '../../context/UserContext';
 import { Progress } from '../../components/Progress';
 import { SelectionCard } from '../../components/SelectionCard';
 
@@ -27,14 +28,47 @@ const goalOptions = [
 
 const GoalsScreen: React.FC = () => {
   const navigation = useNavigation<GoalsScreenNavigationProp>();
-  const [selectedGoal, setSelectedGoal] = useState<string | null>(null);
+  const { userData, updateUserData } = useUser();
+  const [selectedGoal, setSelectedGoal] = useState<string | null>(userData.primaryGoal || null);
 
   const handleContinue = () => {
-    if (selectedGoal) {
-      // In production, save the goal to user preferences
-      console.log('Selected goal:', selectedGoal);
-      navigation.navigate('OnboardingTimings');
+    // Business logic: Goal selection is required to continue
+    if (!selectedGoal) {
+      Alert.alert(
+        'Goal Required',
+        'Please select your primary health goal to personalize your meal recommendations.',
+        [{ text: 'OK' }]
+      );
+      return;
     }
+
+    // Validate goal selection
+    const validGoals = goalOptions.map(g => g.id);
+    if (!validGoals.includes(selectedGoal)) {
+      Alert.alert(
+        'Invalid Selection',
+        'Please select a valid goal option.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    // Save goal to global context
+    updateUserData({
+      primaryGoal: selectedGoal
+    });
+    
+    console.log('Goal saved:', selectedGoal);
+    
+    // Show confirmation and navigate
+    Alert.alert(
+      'Goal Set!',
+      `Great choice! We'll help you ${selectedGoal.replace('-', ' ')} with personalized meal plans.`,
+      [{ 
+        text: 'Continue', 
+        onPress: () => navigation.navigate('OnboardingTimings')
+      }]
+    );
   };
 
   return (

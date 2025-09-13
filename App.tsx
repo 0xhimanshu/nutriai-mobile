@@ -8,6 +8,7 @@ import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { UserProvider } from './src/context/UserContext';
 
 // Import screens
 import LandingScreen from './src/screens/LandingScreen';
@@ -48,7 +49,8 @@ const Stack = createStackNavigator<RootStackParamList>();
 export default function App() {
   return (
     <SafeAreaProvider>
-      <NavigationContainer>
+      <UserProvider>
+        <NavigationContainer>
         <Stack.Navigator
           initialRouteName="Landing"
           screenOptions={{
@@ -93,10 +95,11 @@ export default function App() {
           {/* Admin */}
           <Stack.Screen name="Admin" component={AdminScreen} />
         </Stack.Navigator>
-      </NavigationContainer>
-      
-      {/* Status bar configuration */}
-      <StatusBar style="light" backgroundColor="#000000" />
+        </NavigationContainer>
+        
+        {/* Status bar configuration */}
+        <StatusBar style="light" backgroundColor="#000000" />
+      </UserProvider>
     </SafeAreaProvider>
   );
 }

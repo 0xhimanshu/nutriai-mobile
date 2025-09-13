@@ -20,18 +20,57 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import type { RootStackParamList } from '../../App';
+import { useUser } from '../context/UserContext';
 
 type SignInScreenNavigationProp = StackNavigationProp<RootStackParamList, 'SignIn'>;
 
 const SignInScreen: React.FC = () => {
   const navigation = useNavigation<SignInScreenNavigationProp>();
+  const { updateUserData } = useUser();
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Email validation
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  // Phone validation
+  const validatePhone = (phone: string): boolean => {
+    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/; // Basic international format
+    return phoneRegex.test(phone.replace(/\s/g, ''));
+  };
+
   const handleSignIn = async () => {
+    // Business logic validation
     if (!email.trim() && !phone.trim()) {
-      Alert.alert('Error', 'Please enter either email or phone number');
+      Alert.alert(
+        'Required Information', 
+        'Please enter either email or phone number to continue',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    // Email validation if provided
+    if (email.trim() && !validateEmail(email.trim())) {
+      Alert.alert(
+        'Invalid Email', 
+        'Please enter a valid email address (e.g., user@example.com)',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    // Phone validation if provided
+    if (phone.trim() && !validatePhone(phone.trim())) {
+      Alert.alert(
+        'Invalid Phone', 
+        'Please enter a valid phone number with country code (e.g., +1234567890)',
+        [{ text: 'OK' }]
+      );
       return;
     }
 
@@ -39,16 +78,53 @@ const SignInScreen: React.FC = () => {
     
     try {
       // In production, this would call your authentication API
-      console.log('Signing in with:', { email, phone });
+      const userData = { 
+        email: email.trim() || null, 
+        phone: phone.trim() || null,
+        timestamp: new Date().toISOString()
+      };
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('Creating account with validated data:', userData);
       
-      // Navigate to onboarding
-      navigation.navigate('OnboardingLocation');
+      // Simulate API call with proper error handling
+      await new Promise((resolve, reject) => {
+        setTimeout(() => {
+          // Simulate 10% API failure rate for testing
+          if (Math.random() > 0.9) {
+            reject(new Error('Network timeout'));
+          } else {
+            resolve(userData);
+          }
+        }, 1500); // Realistic API delay
+      });
+      
+      // Save user data to global context
+      updateUserData({
+        email: email.trim() || undefined,
+        phone: phone.trim() || undefined,
+        id: `user_${Date.now()}`, // Generate temporary ID
+      });
+
+      // Show success feedback
+      Alert.alert(
+        'Account Created!', 
+        'Welcome to NutriAI! Let\'s set up your preferences.',
+        [{ 
+          text: 'Continue', 
+          onPress: () => navigation.navigate('OnboardingLocation')
+        }]
+      );
       
     } catch (error) {
-      Alert.alert('Error', 'Sign in failed. Please try again.');
+      console.error('Sign-up error:', error);
+      Alert.alert(
+        'Sign-up Failed', 
+        'Unable to create account. Please check your internet connection and try again.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Retry', onPress: handleSignIn }
+        ]
+      );
     } finally {
       setLoading(false);
     }
